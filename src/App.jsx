@@ -6,12 +6,13 @@ import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
 import logoImg from "./assets/logo.png";
 import AvailablePlaces from "./components/AvailablePlaces.jsx";
 import { updateUserPlaces } from "./http.js";
+import Error from "./components/Error.jsx";
 
 function App() {
   const selectedPlace = useRef();
 
   const [userPlaces, setUserPlaces] = useState([]);
-
+  const [errorUpdatingUserPlaces, setErrorUpdatingUserPlaces] = useState();
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   function handleStartRemovePlace(place) {
@@ -37,7 +38,10 @@ function App() {
     try {
       await updateUserPlaces([...userPlaces, selectedPlace]);
     } catch (err) {
-      // next development - error handler BE and FE
+      setUserPlaces(userPlaces);
+      setErrorUpdatingUserPlaces({
+        message: err.message || "ada error waktu update user places",
+      });
     }
   }
 
@@ -49,8 +53,22 @@ function App() {
     setModalIsOpen(false);
   }, []);
 
+  function handleError() {
+    setErrorUpdatingUserPlaces(null);
+  }
+
   return (
     <>
+      <Modal open={errorUpdatingUserPlaces} onClose={handleError}>
+        {errorUpdatingUserPlaces && (
+          <Error
+            title="An error occured!"
+            message={errorUpdatingUserPlaces.message}
+            onConfirm={handleError}
+          />
+        )}
+      </Modal>
+
       <Modal open={modalIsOpen} onClose={handleStopRemovePlace}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
@@ -66,6 +84,7 @@ function App() {
           you have visited.
         </p>
       </header>
+
       <main>
         <Places
           title="I'd like to visit ..."
@@ -73,7 +92,6 @@ function App() {
           places={userPlaces}
           onSelectPlace={handleStartRemovePlace}
         />
-
         <AvailablePlaces onSelectPlace={handleSelectPlace} />
       </main>
     </>
